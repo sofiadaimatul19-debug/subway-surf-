@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Tangkap Bintang</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #4facfe, #00f2fe);
+      color: #222;
+    }
+
+    .wrap {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .desc {
+      text-align: center;
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .box {
+      background: white;
+      padding: 12px;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    #startBtn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #ffb703;
+      color: #222;
+      margin-bottom: 12px;
+    }
+
+    #message {
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      min-height: 24px;
+      margin-bottom: 12px;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: 60vh;
+      min-height: 360px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      touch-action: manipulation;
+    }
+
+    #target {
+      position: absolute;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      background: #ffdd57;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+      user-select: none;
+    }
+
+    #target:active {
+      transform: scale(0.92);
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>⭐ Tangkap Bintang</h1>
+    <div class="desc">Tekan Mulai, lalu tap bintang sebanyak mungkin dalam 20 detik.</div>
+
+    <div class="panel">
+      <div class="box">
+        <span class="label">Skor</span>
+        <span id="score">0</span>
+      </div>
+      <div class="box">
+        <span class="label">Waktu</span>
+        <span id="time">20</span>
+      </div>
+      <div class="box">
+        <span class="label">Rekor</span>
+        <span id="best">0</span>
+      </div>
+    </div>
+
+    <button id="startBtn">Mulai Game</button>
+    <div id="message">Siap bermain?</div>
+
+    <div id="gameArea">
+      <div id="target">⭐</div>
+    </div>
+
+    <div class="footer">Game sederhana HTML + CSS + JavaScript</div>
+  </div>
+
+  <script>
+    const scoreEl = document.getElementById("score");
+    const timeEl = document.getElementById("time");
+    const bestEl = document.getElementById("best");
+    const startBtn = document.getElementById("startBtn");
+    const messageEl = document.getElementById("message");
+    const gameArea = document.getElementById("gameArea");
+    const target = document.getElementById("target");
+
+    let score = 0;
+    let timeLeft = 20;
+    let gameRunning = false;
+    let timer = null;
+
+    let bestScore = Number(localStorage.getItem("bestScoreBintang")) || 0;
+    bestEl.textContent = bestScore;
+
+    function moveTarget() {
+      const size = Math.max(48, 72 - Math.floor(score / 2));
+      target.style.width = size + "px";
+      target.style.height = size + "px";
+      target.style.fontSize = Math.max(24, size / 2) + "px";
+
+      const maxX = gameArea.clientWidth - size;
+      const maxY = gameArea.clientHeight - size;
+
+      const x = Math.floor(Math.random() * maxX);
+      const y = Math.floor(Math.random() * maxY);
+
+      target.style.left = x + "px";
+      target.style.top = y + "px";
+
+      const icons = ["⭐", "🌟", "💎", "🪙"];
+      target.textContent = icons[Math.floor(Math.random() * icons.length)];
+    }
+
+    function startGame() {
+      score = 0;
+      timeLeft = 20;
+      gameRunning = true;
+
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      messageEl.textContent = "Ayo, tap bintangnya!";
+      startBtn.disabled = true;
+      startBtn.textContent = "Game Berjalan...";
+      target.style.display = "flex";
+
+      moveTarget();
+
+      timer = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = timeLeft;
+
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearInterval(timer);
+      target.style.display = "none";
+      startBtn.disabled = false;
+      startBtn.textContent = "Main Lagi";
+
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("bestScoreBintang", bestScore);
+        bestEl.textContent = bestScore;
+        messageEl.textContent = "Waktu habis! Skor kamu " + score + " 🎉 Rekor baru!";
+      } else {
+        messageEl.textContent = "Waktu habis! Skor kamu " + score;
+      }
+    }
+
+    target.addEventListener("click", () => {
+      if (!gameRunning) return;
+      score++;
+      scoreEl.textContent = score;
+      moveTarget();
+    });
+
+    startBtn.addEventListener("click", startGame);
+
+    window.addEventListener("resize", () => {
+      if (gameRunning) moveTarget();
+    });
+  </script>
+</body>
+</html>
